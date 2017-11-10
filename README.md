@@ -10,7 +10,7 @@
 
 ### Run the architecture search
 
-If you run with the ResSet as the function set:
+If you run with the ResSet as the function set, you go to Evolutionary-AEs folder and
 
 ```shell
 python exp_main.py -f ResSet
@@ -21,6 +21,13 @@ Or if you run with the ConvSet:
 ```shell
 python exp_main.py -f ConvSet
 ```
+
+Or if you run with the Primitive function set, you go to Evolutionary-AEs-primitive folder and
+
+```shell
+python exp_main.py -f Primitive
+```
+Primitive set does not contain ConvBlock or ResBlock.
 
 When you use the multiple GPUs, please specify the `-g` option:
 
