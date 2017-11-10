@@ -100,32 +100,6 @@ def init_weights(net, init_type='normal'):
     else:
         raise NotImplementedError('initialization method [%s] is not implemented' % init_type)
 
-
-class autoencoder(nn.Module):
-    def __init__(self):
-        super(autoencoder, self).__init__()
-        self.encoder = nn.Sequential(
-            nn.Linear(160 * 160, 10000),
-            nn.ReLU(True))
-            # nn.Linear(5000, 1000),
-            # nn.ReLU(True))
-        self.decoder = nn.Sequential(
-            # nn.Linear(1000, 5000),
-            # nn.ReLU(True),
-            nn.Linear(10000, 160*160),
-            nn.Tanh())
-
-    def forward(self, x, t):
-        x = self.encoder(x)
-        x = self.decoder(x)
-        return x
-
-def to_img(x, imgSize, channel):
-    x = 0.5 * (x + 1)
-    x = x.clamp(0, 1)
-    x = x.view(x.size(0), 1, 160, 160)
-    return x
-
 # __init__: load dataset
 # __call__: training the CNN defined by CGP list
 class CNN_train():
@@ -156,11 +130,6 @@ class CNN_train():
                                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
                            ]))
                 self.dataloader = torch.utils.data.DataLoader(dataset, batch_size=64, shuffle=True, num_workers=int(1))
-            # elif dataset_name == 'cifar100':
-            #     self.n_class = 100
-            #     self.channel = 3
-            #     self.pad_size = 4
-            #     train, test = chainer.datasets.get_cifar100(withlabel=True, ndim=3, scale=1.0)
             elif dataset_name == 'mnist':    # mnist
                 self.n_class = 10
                 self.channel = 1
@@ -194,42 +163,11 @@ class CNN_train():
             # model validation mode
             if validation:
                 pass
-                # split into train and validation data
-                # np.random.seed(2016)  # always same data splitting
-                # order = np.random.permutation(len(train))
-                # np.random.seed()
-                # if self.verbose:
-                #     print('\tdata split order: ', order)
-                # train_size = int(len(train) * (1. - valid_data_ratio))
-                # # train data
-                # self.x_train, self.y_train = train[order[:train_size]][0], train[order[:train_size]][1]
-                # # test data (for validation)
-                # self.x_test, self.y_test = train[order[train_size:]][0], train[order[train_size:]][1]
-            # model test mode
             else:
                 pass
-                # # train data
-                # self.x_train, self.y_train = train[range(len(train))][0], train[range(len(train))][1]
-                ## test data
-                # self.x_test, self.y_test = test[range(len(test))][0], test[range(len(test))][1]
         else:
             print('\tInvalid input dataset name at CNN_train()')
             exit(1)
-
-        # # preprocessing (subtraction of mean pixel values)
-        # x_mean = 0
-        # for x in self.x_train:
-        #     x_mean += x
-        # x_mean /= len(self.x_train)
-        # self.x_train -= x_mean
-        # self.x_test -= x_mean
-
-        # # data size
-        # self.train_data_num = len(self.x_train)
-        # self.test_data_num = len(self.x_test)
-        # if self.verbose:
-        #     print('\ttrain data shape:', self.x_train.shape)
-        #     print('\ttest data shape :', self.x_test.shape)
 
     def __call__(self, cgp, gpuID, epoch_num=200, batchsize=64, weight_decay=1e-4, eval_epoch_num=10,
                  data_aug=True, comp_graph='comp_graph.dot', out_model='mymodel.model', init_model=None,
@@ -237,11 +175,9 @@ class CNN_train():
         if self.verbose:
             print('GPUID    :', gpuID)
             print('epoch_num:', epoch_num)
-            # print('batchsize:', batchsize)
         
         torch.backends.cudnn.benchmark = True # 画像サイズが変わらないときは高速?
 
-        # # model = CGP2CNN(cgp, self.channel, self.n_class, self.imgSize)
         # model = CGP2CNN_autoencoder(cgp, self.channel, self.n_class, self.imgSize)
         model = CGP2CNN_autoencoder_primitive(cgp, self.channel, self.n_class, self.imgSize)
         init_weights(model, 'normal')
@@ -279,7 +215,6 @@ class CNN_train():
                     input_ = Variable(input)
                     input2.resize_as_(data).copy_(data)
                     input2_ = Variable(input2)
-                    # data = Variable(data)
                     data_noise = self.gaussian_noise(input_, 0.0, std)
                     optimizer.zero_grad()
                     try:
@@ -296,40 +231,15 @@ class CNN_train():
                         vutils.save_image(data_noise.data, './noise_samples%d.png' % gpuID, normalize=False)
                         vutils.save_image(input2_.data, './org_samples%d.png' % gpuID, normalize=False)
                         vutils.save_image(output.data, './output%d.png' % gpuID, normalize=False)
-                        # pic = to_img(output.cpu().data, self.imgSize, self.channel)
-                        # vutils.save_image(pic, './sample.png')
                 ite += 1
             train_loss /= len(self.dataloader.dataset)
             print('Train set : Average loss: {:.4f}'.format(train_loss))
-            # print('Train PSNR: Average PSNR: {:.4f}'.format(ave_psnr/(len(self.dataloader.dataset)*20)))
             print('time ', time.time()-start_time)
             if epoch % 5 == 0:
                 t_loss = self.__test(model, criterion, gpuID, input, input2)
         
         torch.save(model.state_dict(), './model_%d.pth' % (gpuID))
         return t_loss
-
-
-    def data_augmentation(self, x_train):
-        _, c, h, w = x_train.shape
-        # pad_h = h + 2 * self.pad_size
-        # pad_w = w + 2 * self.pad_size
-        # aug_data = np.zeros_like(x_train)
-        # for i, x in enumerate(x_train):
-        #     pad_img = np.zeros((c, pad_h, pad_w))
-        #     pad_img[:, self.pad_size:h+self.pad_size, self.pad_size:w+self.pad_size] = x
-
-        #     # Randomly crop and horizontal flip the image
-        #     top = np.random.randint(0, pad_h - h + 1)
-        #     left = np.random.randint(0, pad_w - w + 1)
-        #     bottom = top + h
-        #     right = left + w
-        #     if np.random.randint(0, 2):
-        #         pad_img = pad_img[:, :, ::-1]
-
-        #     aug_data[i] = pad_img[:, top:bottom, left:right]
-
-        # return aug_data
 
 
     def __test(self, model, criterion, gpuID, input, input2):
@@ -341,7 +251,6 @@ class CNN_train():
         for _, (data, target) in enumerate(self.test_dataloader):
             data = data[:,0:1,:,:]
             data, target = data.cuda(gpuID), target.cuda(gpuID)
-            count = 0
             for std in range(10,101,10):           
                 input.resize_as_(data).copy_(data)
                 input_ = Variable(input, volatile=True)
@@ -364,11 +273,9 @@ class CNN_train():
                     vutils.save_image(output.data, './test_output.png', normalize=False)
 
         test_loss /= len(self.test_dataloader.dataset)
-        ave_psnr /= (len(self.test_dataloader.dataset)*count)
+        ave_psnr /= count
         print('Test set: loss: {:.4f}'.format(test_loss))
         print('Test set: PSNR: {:.4f}'.format(ave_psnr))
-        # vutils.save_image(data_noise.data, './test_noise_samples.png', normalize=True)
-        # vutils.save_image(output.data, './test_output.png', normalize=True)
         return ave_psnr
 
     def gaussian_noise(self, inp, mean, std):
