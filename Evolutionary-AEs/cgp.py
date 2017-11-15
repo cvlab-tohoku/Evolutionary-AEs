@@ -9,13 +9,79 @@ import math
 # gene[f][c] f:function type, c:connection (nodeID)
 class Individual(object):
 
-    def __init__(self, net_info):
+    def __init__(self, net_info, init):
         self.net_info = net_info
         self.gene = np.zeros((self.net_info.node_num + self.net_info.out_num, self.net_info.max_in_num + 1)).astype(int)
         self.is_active = np.empty(self.net_info.node_num + self.net_info.out_num).astype(bool)
         self.is_pool = np.empty(self.net_info.node_num + self.net_info.out_num).astype(bool)
         self.eval = None
-        self.init_gene()
+        if init:
+            print('init with specific architectures')
+            self.init_gene_with_conv() # In the case of starting only convolution
+        else:
+            self.init_gene()           # generate initial individual randomly
+
+    def init_gene_with_conv(self):
+        # Yan's model
+        resnet = ['ConvBlock64_3', 'ConvBlock64_1', 'ConvBlock64_1', 'ConvBlock64_1', 'ConvBlock64_1']
+       
+        input_layer_num = int(self.net_info.input_num / self.net_info.rows) + 1
+        output_layer_num = int(self.net_info.out_num / self.net_info.rows) + 1
+        layer_ids = [((self.net_info.cols - 1 - input_layer_num - output_layer_num) + i) // (len(resnet)) for i in range(len(resnet))]
+        prev_id = 0 # i.e. input layer
+        current_layer = input_layer_num
+        block_ids = []  # *do not connect with these ids
+        
+        # building convolution net
+        for i, idx in enumerate(layer_ids):
+            
+            current_layer += idx
+            n = current_layer * self.net_info.rows + np.random.randint(self.net_info.rows)
+            block_ids.append(n)
+            self.gene[n][0] = self.net_info.func_type.index(resnet[i])
+            col = np.min((int(n / self.net_info.rows), self.net_info.cols))
+            max_connect_id = col * self.net_info.rows + self.net_info.input_num
+            min_connect_id = (col - self.net_info.level_back) * self.net_info.rows + self.net_info.input_num \
+                if col - self.net_info.level_back >= 0 else 0
+            
+            self.gene[n][1] = prev_id
+            for j in range(1, self.net_info.max_in_num):
+                self.gene[n][j + 1] = min_connect_id + np.random.randint(max_connect_id - min_connect_id)
+            
+            prev_id = n + self.net_info.input_num
+        
+        # output layer        
+        n = self.net_info.node_num
+        type_num = self.net_info.func_type_num if n < self.net_info.node_num else self.net_info.out_type_num
+        self.gene[n][0] = np.random.randint(type_num)
+        col = np.min((int(n / self.net_info.rows), self.net_info.cols))
+        max_connect_id = col * self.net_info.rows + self.net_info.input_num
+        min_connect_id = (col - self.net_info.level_back) * self.net_info.rows + self.net_info.input_num \
+            if col - self.net_info.level_back >= 0 else 0
+        
+        self.gene[n][1] = prev_id
+        for i in range(1, self.net_info.max_in_num):
+            self.gene[n][i + 1] = min_connect_id + np.random.randint(max_connect_id - min_connect_id)        
+        block_ids.append(n) 
+           
+        # intermediate node
+        for n in range(self.net_info.node_num + self.net_info.out_num):
+            
+            if n in block_ids:
+                continue
+            
+            # type gene
+            type_num = self.net_info.func_type_num if n < self.net_info.node_num else self.net_info.out_type_num
+            self.gene[n][0] = np.random.randint(type_num)
+            # connection gene
+            col = np.min((int(n / self.net_info.rows), self.net_info.cols))
+            max_connect_id = col * self.net_info.rows + self.net_info.input_num
+            min_connect_id = (col - self.net_info.level_back) * self.net_info.rows + self.net_info.input_num \
+                if col - self.net_info.level_back >= 0 else 0
+            for i in range(self.net_info.max_in_num):
+                self.gene[n][i + 1] = min_connect_id + np.random.randint(max_connect_id - min_connect_id)
+
+        self.check_active()
 
     def init_gene(self):
         # intermediate node
@@ -149,14 +215,15 @@ class Individual(object):
 # CGP with (1 + \lambda)-ES
 class CGP(object):
 
-    def __init__(self, net_info, eval_func, lam=4, imgSize=32):
+    def __init__(self, net_info, eval_func, lam=4, imgSize=32, init=False):
         self.lam = lam
-        self.pop = [Individual(net_info) for _ in range(1 + self.lam)]
+        self.pop = [Individual(net_info, init) for _ in range(1 + self.lam)]
         self.eval_func = eval_func
 
         self.num_gen = 0
         self.num_eval = 0
         self.max_pool_num = int(math.log2(imgSize) - 2)
+        self.init = init
 
     def _evaluation(self, pop, eval_flag):
         # create network list
@@ -239,11 +306,13 @@ class CGP(object):
 
             active_num = self.pop[0].count_active_node()
             is_pool = True
-            pool_num = self.pop[0].net_info.max_active_num # 初期化
-            while active_num < self.pop[0].net_info.min_active_num or active_num > self.pop[0].net_info.max_active_num or is_pool or self.max_pool_num < pool_num:
-                self.pop[0].mutation(1.0)
-                active_num = self.pop[0].count_active_node()
-                is_pool, pool_num = self.pop[0].check_pool()
+            pool_num = self.pop[0].net_info.max_active_num # Initialization
+            if self.init:
+                pass
+            else: # in the case of not using an init indiviudal
+                while active_num < self.pop[0].net_info.min_active_num or active_num > self.pop[0].net_info.max_active_num:
+                    self.pop[0].mutation(1.0)
+                    active_num = self.pop[0].count_active_node()
             self._evaluation([self.pop[0]], np.array([True]))
             print(self._log_data(net_info_type='active_only', start_time=start_time))
 
@@ -255,16 +324,13 @@ class CGP(object):
                     eval_flag[i] = False
                     self.pop[i + 1].copy(self.pop[0])  # copy a parent
                     active_num = self.pop[i + 1].count_active_node()
-                    is_pool = True
-                    pool_num = self.pop[0].net_info.max_active_num # 初期化
 
                     # forced mutation
                     while not eval_flag[i] or active_num < self.pop[i + 1].net_info.min_active_num \
-                            or active_num > self.pop[i + 1].net_info.max_active_num or is_pool or self.max_pool_num < pool_num:
+                            or active_num > self.pop[i + 1].net_info.max_active_num:
                         self.pop[i + 1].copy(self.pop[0])  # copy a parent
                         eval_flag[i] = self.pop[i + 1].mutation(mutation_rate)  # mutation
                         active_num = self.pop[i + 1].count_active_node()
-                        is_pool, pool_num = self.pop[i + 1].check_pool()
 
                 # evaluation and selection
                 evaluations = self._evaluation(self.pop[1:], eval_flag=eval_flag)
