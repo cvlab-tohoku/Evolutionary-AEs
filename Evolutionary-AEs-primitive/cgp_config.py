@@ -68,6 +68,7 @@ class CNNEvaluation(object):
         return evaluations
 
 
+
 class CgpInfoConvSet(object):
     def __init__(self, rows=30, cols=40, level_back=40, min_active_num=8, max_active_num=50):
         # network configurations depending on the problem
@@ -76,16 +77,16 @@ class CgpInfoConvSet(object):
         self.func_type = ['ConvBlock32_3', 'ConvBlock32_5',
                           'ConvBlock64_3', 'ConvBlock64_5',
                           'ConvBlock128_3', 'ConvBlock128_5',
-                          'pool_max', 'pool_ave']
+                          'ConvBlock32_1', 'ConvBlock64_1', 'ConvBlock128_1']
                           # 'concat', 'sum']
         self.func_in_num = [1, 1,
                             1, 1,
                             1, 1,
-                            1, 1]
+                            1, 1, 1]
                             # 2, 2]
 
         self.out_num = 1
-        self.out_type = ['ConvBlock1_1']
+        self.out_type = ['DeConvBlock3_3']
         self.out_in_num = [1]
 
         # CGP network configuration
@@ -133,38 +134,6 @@ class CgpInfoResSet(object):
         self.out_type_num = len(self.out_type)
         self.max_in_num = np.max([np.max(self.func_in_num), np.max(self.out_in_num)])
 
-class CgpInfoFullSet(object):
-    def __init__(self, rows=30, cols=40, level_back=40, min_active_num=8, max_active_num=50):
-        # network configurations depending on the problem
-        self.input_num = 1
-
-        self.func_type = ['full256', 'full512',
-                          'full1024', 'full2048',
-                          'full4096', 'full8192',
-                          'full16384']
-                          # 'concat', 'sum']
-        self.func_in_num = [1, 1,
-                            1, 1,
-                            1, 1,
-                            1]
-                            # 2, 2]
-
-        self.out_num = 1
-        self.out_type = ['full']
-        self.out_in_num = [1]
-
-        # CGP network configuration
-        self.rows = rows
-        self.cols = cols
-        self.node_num = rows * cols
-        self.level_back = level_back
-        self.min_active_num = min_active_num
-        self.max_active_num = max_active_num
-
-        self.func_type_num = len(self.func_type)
-        self.out_type_num = len(self.out_type)
-        self.max_in_num = np.max([np.max(self.func_in_num), np.max(self.out_in_num)])
-
 
 class CgpInfoPrimitiveSet(object):
     def __init__(self, rows=30, cols=40, level_back=40, min_active_num=8, max_active_num=50):
@@ -174,18 +143,20 @@ class CgpInfoPrimitiveSet(object):
         self.func_type = ['Convolution32_3', 'Convolution32_5',
                           'Convolution64_3', 'Convolution64_5',
                           'Convolution128_3', 'Convolution128_5',
-                          'pool_max', 'pool_ave',
-                          'ReLU', 'BatchNorm']
+                          'Convolution32_1', 'Convolution64_1', 'Convolution128_1',
+                          'ReLU']
+                          # 'pool_max', 'pool_ave',
+                          # 'ReLU', 'BatchNorm']
                           # 'concat', 'sum']
         self.func_in_num = [1, 1,
                             1, 1,
                             1, 1,
-                            1, 1,
-                            1, 1]
+                            1, 1, 1,
+                            1]
                             # 2, 2]
 
         self.out_num = 1
-        self.out_type = ['Convolution1_1']
+        self.out_type = ['DeConvolution3_3']
         self.out_in_num = [1]
 
         # CGP network configuration

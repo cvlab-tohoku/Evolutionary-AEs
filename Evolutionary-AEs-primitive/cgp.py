@@ -16,13 +16,14 @@ class Individual(object):
         self.is_pool = np.empty(self.net_info.node_num + self.net_info.out_num).astype(bool)
         self.eval = None
         if init:
+            print('init with specific architectures')
             self.init_gene_with_conv() # In the case of starting only convolution
         else:
             self.init_gene()           # generate initial individual randomly
 
     def init_gene_with_conv(self):
-        
-        resnet = ['Convolution32_3']
+        # Yan's model
+        resnet = ['Convolution64_3', 'ReLU', 'Convolution64_1', 'ReLU', 'Convolution64_1', 'ReLU', 'Convolution64_1', 'ReLU', 'Convolution64_1', 'ReLU']
        
         input_layer_num = int(self.net_info.input_num / self.net_info.rows) + 1
         output_layer_num = int(self.net_info.out_num / self.net_info.rows) + 1
@@ -222,6 +223,7 @@ class CGP(object):
         self.num_gen = 0
         self.num_eval = 0
         self.max_pool_num = int(math.log2(imgSize) - 2)
+        self.init = init
 
     def _evaluation(self, pop, eval_flag):
         # create network list
@@ -305,11 +307,12 @@ class CGP(object):
             active_num = self.pop[0].count_active_node()
             is_pool = True
             pool_num = self.pop[0].net_info.max_active_num # Initialization
-            # 初期個体を最小単位から始めるため
-            # while active_num < self.pop[0].net_info.min_active_num or active_num > self.pop[0].net_info.max_active_num or is_pool or self.max_pool_num < pool_num:
-            #     self.pop[0].mutation(1.0)
-            #     active_num = self.pop[0].count_active_node()
-            #     is_pool, pool_num = self.pop[0].check_pool()
+            if self.init:
+                pass
+            else: # in the case of not using an init indiviudal
+                while active_num < self.pop[0].net_info.min_active_num or active_num > self.pop[0].net_info.max_active_num:
+                    self.pop[0].mutation(1.0)
+                    active_num = self.pop[0].count_active_node()
             self._evaluation([self.pop[0]], np.array([True]))
             print(self._log_data(net_info_type='active_only', start_time=start_time))
 
@@ -321,17 +324,14 @@ class CGP(object):
                     eval_flag[i] = False
                     self.pop[i + 1].copy(self.pop[0])  # copy a parent
                     active_num = self.pop[i + 1].count_active_node()
-                    is_pool = True
-                    pool_num = self.pop[0].net_info.max_active_num # Initialization
 
                     # forced mutation
                     while not eval_flag[i] or active_num < self.pop[i + 1].net_info.min_active_num \
-                            or active_num > self.pop[i + 1].net_info.max_active_num or is_pool or self.max_pool_num < pool_num:
+                            or active_num > self.pop[i + 1].net_info.max_active_num:
                         self.pop[i + 1].copy(self.pop[0])  # copy a parent
                         eval_flag[i] = self.pop[i + 1].mutation(mutation_rate)  # mutation
                         active_num = self.pop[i + 1].count_active_node()
-                        is_pool, pool_num = self.pop[i + 1].check_pool()
-
+                        
                 # evaluation and selection
                 evaluations = self._evaluation(self.pop[1:], eval_flag=eval_flag)
                 best_arg = evaluations.argmax()
