@@ -1,6 +1,5 @@
 # Requirement
 
-* Pytorch
 * Ubuntu 14.04 LTS
 * CUDA version 8.0
 * Python version 3.6.2
