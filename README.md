@@ -1,3 +1,10 @@
+# Exploiting the Potential of Standard Convolutional Autoencoders for Image Restoration by Evolutionary Search
+
+This repository contains the code for the following paper [arXiv](https://arxiv.org/abs/1803.00370):
+
+Masanori Suganuma, Mete Ozay, and Takayuki Okatani, "Exploiting the Potential of Standard Convolutional Autoencoders for Image Restoration by Evolutionary Search," arXiv:1803.00370, (2018)
+
+---
 # Requirement
 
 * Ubuntu 14.04 LTS
@@ -5,17 +12,23 @@
 * Python version 3.6.2
 * Pytortch version 0.2.0_4
 
----
+
 ## Usage
 
-### Run the architecture search
+### Run the architecture search (denoising)
+
+```shell
+python exp_main.py -i
+```
+
+### Run the architecture search (inpainting)
 
 ```shell
 python exp_main.py -i -mask center
 ```
 
 When you specify the `-i` option, an initial individual consists of a single convolution layer and a single deconvolution layer.
-To choose inpainting tasks, please specify the `-mask` option(center, pixel, half).
+To choose inpainting tasks, please specify the `-mask` option (center, pixel, half).
 
 
 When you use the multiple GPUs, please specify the `-g` option (default:1):
@@ -50,4 +63,13 @@ To re-start the evolution:
 
 ```shell
 python exp_main.py -m reevolution
+```
+
+
+### Dataset
+
+To create the training, validation, and test sets of the [CelebA dataset](http://mmlab.ie.cuhk.edu.hk/projects/CelebA.html):
+
+```shell
+python create_data.py
 ```
