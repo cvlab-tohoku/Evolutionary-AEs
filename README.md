@@ -4,8 +4,16 @@ This repository contains the code for the following paper [arXiv](https://arxiv.
 
 Masanori Suganuma, Mete Ozay, and Takayuki Okatani, "Exploiting the Potential of Standard Convolutional Autoencoders for Image Restoration by Evolutionary Search," arXiv:1803.00370, (2018)
 
----
-# Requirement
+Sample results on inpainting tasks: 
+
+![example](Inpainiting/example/example.png "Sample inpainting results")
+
+Sample results on denoising tasks: 
+
+![example](Denoising/example/example.png "Sample denoising results")
+
+
+## Requirement
 
 * Ubuntu 14.04 LTS
 * CUDA version 8.0
@@ -73,3 +81,11 @@ To create the training, validation, and test sets of the [CelebA dataset](http:/
 ```shell
 python create_data.py
 ```
+
+
+The cars dataset is available [here](http://ai.stanford.edu/~jkrause/cars/car_dataset.html).
+
+The SVHN dataset is available [here](http://ufldl.stanford.edu/housenumbers/).
+
+The BSDS500 dataset is available [here](https://www2.eecs.berkeley.edu/Research/Projects/CS/vision/bsds/).
+
