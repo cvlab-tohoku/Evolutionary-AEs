@@ -6,7 +6,7 @@ Masanori Suganuma, Mete Ozay, and Takayuki Okatani, "Exploiting the Potential of
 
 Sample results on inpainting tasks: 
 
-![example](Inpainiting/example/example.png "Sample inpainting results")
+![example](Inpainting/example/example.png "Sample inpainting results")
 
 Sample results on denoising tasks: 
 
