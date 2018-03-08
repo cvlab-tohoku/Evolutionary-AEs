@@ -21,7 +21,7 @@ Sample results on denoising tasks:
 * Pytortch version 0.2.0_4
 
 
-## Usage
+## Us_age
 
 ### Run the architecture search (denoising)
 
