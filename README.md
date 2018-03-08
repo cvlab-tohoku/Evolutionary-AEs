@@ -76,16 +76,20 @@ python exp_main.py -m reevolution
 
 ### Dataset
 
-To create the training, validation, and test sets of the [CelebA dataset](http://mmlab.ie.cuhk.edu.hk/projects/CelebA.html):
-
-```shell
-python create_data.py
-```
-
+The CelebA dataset is available [here](http://mmlab.ie.cuhk.edu.hk/projects/CelebA.html).
 
 The cars dataset is available [here](http://ai.stanford.edu/~jkrause/cars/car_dataset.html).
 
 The SVHN dataset is available [here](http://ufldl.stanford.edu/housenumbers/).
 
 The BSDS500 dataset is available [here](https://www2.eecs.berkeley.edu/Research/Projects/CS/vision/bsds/).
+
+To create the training, validation, and test sets of the CelebA dataset, please download "Align&Cropped Images" and save them to `celebA_org`, and "list_landmarks_landmarks_align_celeba.txt" from [here.](http://mmlab.ie.cuhk.edu.hk/projects/CelebA.html) 
+Then run this code:
+
+```shell
+python create_data.py
+```
+
+
 
