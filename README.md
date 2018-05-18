@@ -2,7 +2,7 @@
 
 This repository contains the code for the following paper [arXiv](https://arxiv.org/abs/1803.00370):
 
-Masanori Suganuma, Mete Ozay, and Takayuki Okatani, "Exploiting the Potential of Standard Convolutional Autoencoders for Image Restoration by Evolutionary Search," arXiv:1803.00370, (2018)
+Masanori Suganuma, Mete Ozay, and Takayuki Okatani, "Exploiting the Potential of Standard Convolutional Autoencoders for Image Restoration by Evolutionary Search," ICML, (2018)
 
 Sample results on inpainting tasks: 
 
@@ -18,7 +18,7 @@ Sample results on denoising tasks:
 * Ubuntu 14.04 LTS
 * CUDA version 8.0
 * Python version 3.6.2
-* Pytortch version 0.2.0_4
+* PyTorch version 0.2.0_4
 
 
 ## Usage
@@ -84,8 +84,8 @@ The SVHN dataset is available [here](http://ufldl.stanford.edu/housenumbers/).
 
 The BSDS500 dataset is available [here](https://www2.eecs.berkeley.edu/Research/Projects/CS/vision/bsds/).
 
-To create the training, validation, and test sets of the CelebA dataset, please download "Align&Cropped Images" and save them to `celebA_org`, and "list_landmarks_landmarks_align_celeba.txt" from [here.](http://mmlab.ie.cuhk.edu.hk/projects/CelebA.html) 
-Then please run following code:
+To create the training, validation, and test sets of the CelebA dataset, please download "Align&Cropped Images" and save images to `./celebA_org`, and download "list_landmarks_landmarks_align_celeba.txt" from [here.](http://mmlab.ie.cuhk.edu.hk/projects/CelebA.html) 
+Then please run a following code:
 
 ```shell
 python create_data.py
